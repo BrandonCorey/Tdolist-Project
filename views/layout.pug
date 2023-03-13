@@ -1,0 +1,23 @@
+doctype html
+
+html(lang='en-US')
+  head
+    title Todo App
+    meta(charset='en-US')
+    link(rel='stylesheet' href='//fonts.googleapis.com/css?family=PT+Sans')
+    link(rel='stylesheet' href='/stylesheets/whitespace-reset.css')
+    link(rel='stylesheet' href='/stylesheets/application.css')
+
+  body
+    header
+      h1 Todo Tracker
+      block headerLinks
+
+    main
+      - let msgTypes = Object.keys(flash || {});
+      if msgTypes.length > 0
+        ul
+          each type in msgTypes
+            each message in flash[type]
+              li.flash(class=type)= message
+      block main

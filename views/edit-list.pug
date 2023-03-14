@@ -1,0 +1,25 @@
+extends layout
+
+block main
+  section#todos
+    header
+      h2 Editing '#{todoList.title}'
+      ul
+        li
+          form.delete(action=`/lists/${todoList.id}/destroy` method='post')
+            button.delete Delete List
+    
+
+  form(action=`/lists/${todoList.id}/edit` method='post')
+    dl
+      dt
+        label(for='todoListTitle') Edit the title of your list:
+      dd
+        input(type='text'
+              id='todoListTitle'
+              name='todoListTitle'
+              value=todoListTitle || todoList.title)
+
+    fieldset.actions
+      input(type='submit' value='Save')
+      a(href='/lists') Cancel

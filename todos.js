@@ -9,6 +9,7 @@ const store = require('connect-loki');
 const TodoList = require('./lib/todolist');
 const Todo = require('./lib/todo');
 const { sortTodos, sortTodoLists } = require('./lib/sort');
+const SessionPersistence = require('./lib/session-persistence');
 
 const app = express();
 const host = 'localhost';
@@ -38,22 +39,10 @@ app.use(session({
 
 app.use(flash());
 
-// session-store only stores raw data (prototype methods not included)
-// - All methods are lost when an object is serialized into raw data (stored in session-store) and deserialized back into an object (when we retrieve the data from the store)
-// as a result, on each request, we initialize a new array, iterate through the old raw todolist data, and  build a new array of todo lists from scratch
-// NOTE: Go back and look at the methods that make this work e.g makeTodoList and makeTodo in other files
-
 app.use((req, res, next) => {
-  let todoLists = [];
-  if ("todoLists" in req.session) {
-    req.session.todoLists.forEach(todoList => { 
-      todoLists.push(TodoList.makeTodoList(todoList));
-    });
-  }
-
-  req.session.todoLists = todoLists;
+  res.locals.store = new SessionPersistence(req.session);
   next();
-});
+})
 
 app.use((req, res, next) => {
   res.locals.flash = req.session.flash;

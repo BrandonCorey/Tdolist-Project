@@ -8,7 +8,8 @@ const flash = require('express-flash');
 const store = require('connect-loki');
 const TodoList = require('./lib/todolist');
 const Todo = require('./lib/todo');
-const { sortTodos, sortTodoLists } = require('./lib/sort');
+const { sortTodos } = require('./lib/sort');
+const SessionPersistence = require('./lib/session-persistence');
 
 const app = express();
 const host = 'localhost';
@@ -38,16 +39,10 @@ app.use(session({
 
 app.use(flash());
 
-// Initialize req.session.todoLists as a list of TodoList objects
+// Create new datastore
+// Constructor needs access to req.session so that it can access persited data of store
 app.use((req, res, next) => {
-  let todoLists = [];
-  if ("todoLists" in req.session) {
-    req.session.todoLists.forEach(todoList => {
-      todoLists.push(TodoList.makeTodoList(todoList));
-    });
-  }
-
-  req.session.todoLists = todoLists;
+  res.locals.store = new SessionPersistence(req.session);
   next();
 });
 
@@ -57,26 +52,23 @@ app.use((req, res, next) => {
   next();
 });
 
-
-const loadTodoList = (todoListId, todoLists) => {
-  return todoLists.find(list => {
-    return list.id === Number(todoListId);
-  });
-};
-
-const loadTodo = (todoListId, todoId, todoLists) => {
-  let todoList = loadTodoList(todoListId, todoLists);
-  if (!todoList) return undefined;
-
-  return todoList.todos.find(todo => todo.id === +todoId);
-};
 app.get('/', (req, res) => {
   res.redirect('/lists');
 });
 
 app.get('/lists', (req, res) => {
+  let store = res.locals.store;
+  let todoLists = store.sortedTodoLists();
+
+  let todosInfo = todoLists.map(todoList => ({
+    countAllTodos: todoList.todos.length,
+    countDoneTodos: todoList.todos.filter(todo => todo.done).length,
+    isDone: store.isDoneTodoList(todoList)
+  }));
+
   res.render('lists', {
-    todoLists: sortTodoLists(req.session.todoLists),
+    todoLists,
+    todosInfo
   });
 });
 
@@ -85,22 +77,26 @@ app.get('/lists/new', (req, res) => {
 });
 
 app.get('/lists/:todoListId', (req, res, next) => {
+  let store = res.locals.store;
   let { todoListId } = req.params;
-  let todoList = loadTodoList(todoListId, req.session.todoLists);
+  let todoList = store.loadTodoList(+todoListId);
 
   if (!todoList) {
     next(new Error('Not found.'));
   } else {
     res.render('list', {
       todoList,
-      todos: sortTodos(todoList)
+      todos: store.sortedTodos(todoList),
+      isDoneTodoList: store.isDoneTodoList(todoList),
+      hasUndoneTodos: store.hasUndoneTodos(todoList),
     });
   }
 });
 
 app.get('/lists/:todoListId/edit', (req, res, next) => {
+  let store = res.locals.store;
   let { todoListId } = req.params;
-  let todoList = loadTodoList(todoListId, req.session.todoLists);
+  let todoList = store.loadTodoList(+todoListId);
 
   if (!todoList) {
     next(new Error('Not found.'));
@@ -144,43 +140,42 @@ app.post('/lists',
 );
 
 app.post('/lists/:todoListId/todos/:todoId/toggle', (req, res, next) => {
+  let store = res.locals.store;
   let { todoListId, todoId } = req.params;
-  let todo = loadTodo(todoListId, todoId, req.session.todoLists);
-  let todoList = loadTodoList(todoListId, req.session.todoLists);
-  let title = todo.title;
+  let toggleResult = store.toggleTodo(+todoListId, +todoId);
 
-  if (!todoList || !todo) {
-    next(new Error('Nout Found.'));
-  } else if (todo.isDone()) {
-    todo.markUndone();
-    req.flash("success", `"${title}" marked as NOT done!`);
-    res.redirect(`/lists/${todoListId}`);
+  if (!toggleResult) {
+    next(new Error('Not Found.'));
   } else {
-    todo.markDone();
-    req.flash("success", `"${title}" marked done.`);
+    let todo = store.loadTodo(+todoListId, +todoId);
+
+    if (todo.done) {
+      req.flash("success", `"${todo.title}" marked done.`);
+    } else {
+      req.flash("success", `"${todo.title}" marked as NOT done!`);
+    }
     res.redirect(`/lists/${todoListId}`);
   }
 });
 
 app.post('/lists/:todoListId/todos/:todoId/destroy', (req, res, next) => {
+  let store = res.locals.store;
   let { todoListId, todoId } = req.params;
-  let todo = loadTodo(todoListId, todoId, req.session.todoLists);
-  let todoList = loadTodoList(todoListId, req.session.todoLists);
+  let deletionResult = store.deleteTodo(+todoListId, +todoId);
 
-  if (!todoList || !todo) {
-    next(new Error('Nout Found.'));
+  if (!deletionResult) {
+    next(new Error('Not Found.'));
   } else {
-    let title = todo.title;
 
-    todoList.removeAt(todoList.findIndexOf(todo));
-    req.flash('success', `"${title}" was removed from the list.`);
+    req.flash('success', 'The todo has been deleted.');
     res.redirect(`/lists/${todoListId}`);
   }
 });
 
 app.post('/lists/:todoListId/complete_all', (req, res, next) => {
+  let store = res.locals.store;
   let { todoListId } = req.params;
-  let todoList = loadTodoList(todoListId, req.session.todoLists);
+  let todoList = store.loadTodoList(+todoListId);
 
   if (!todoList) {
     next(new Error('Not found.'));
@@ -203,9 +198,10 @@ app.post('/lists/:todoListId/todos',
       .withMessage('The title must be less than 100 characters long.')
   ],
   (req, res, next) => {
+    let store = res.locals.store;
     let { todoListId } = req.params;
     let { todoTitle } = req.body;
-    let todoList = loadTodoList(todoListId, req.session.todoLists);
+    let todoList = store.loadTodoList(+todoListId);
 
     if (!todoList) {
       next(new Error('Not found.'));
@@ -230,8 +226,9 @@ app.post('/lists/:todoListId/todos',
 );
 
 app.post('/lists/:todoListId/destroy', (req, res, next) => {
+  let store = res.locals.store;
   let { todoListId } = req.params;
-  let todoList = loadTodoList(todoListId, req.session.todoLists);
+  let todoList = store.loadTodoList(+todoListId);
   let todoLists = req.session.todoLists;
 
   if (!todoList) {
@@ -261,7 +258,7 @@ app.post('/lists/:todoListId/edit',
   (req, res, next) => {
     let { todoListId } = req.params;
     let { todoListTitle } = req.body;
-    let todoList = loadTodoList(todoListId, req.session.todoLists);
+    let todoList = store.loadTodoList(+todoListId);
 
     if (!todoList) {
       next(new Error('Not found.'));

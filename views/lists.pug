@@ -9,8 +9,9 @@ block main
     p#no_list You don't have any todo lists. Why no create one?
   else
     ul#lists
-      each todoList in todoLists
-        li(class=todoList.isDone() ? 'done' : '')
+      each todoList, idx in todoLists
+        - let todoInfo = todosInfo[idx];
+        li(class=todoInfo.isDone ? 'done' : '')
           a(href=`/lists/${todoList.id}`)
             h2= todoList.title
-            p #{todoList.allDone().size()} / #{todoList.size()}
+            p #{todoInfo.countDoneTodos} / #{todoInfo.countAllTodos}

@@ -1,0 +1,19 @@
+extends layout
+
+block main
+  form(action='/users/signin' method='post')
+    dl
+      dt
+        label(for='username') Username:
+      dd
+        input(type='text' name='username' id='username' placeholder='username' value=username)
+      dt
+        label(for='password') Password:
+      dd
+        input(type='text' name='password' id='username' placeholder='password')
+
+    fieldset.actions
+      input(type='submit' value='Sign In')
+      a(href='/lists') Cancel
+
+block signIn

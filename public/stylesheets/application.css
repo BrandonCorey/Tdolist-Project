@@ -42,6 +42,15 @@ form fieldset.actions a {
   -webkit-transition: color 200ms ease;
 }
 
+form fieldset.actions button {
+  margin-top: 1rem;
+}
+
+form fieldset.actions button:hover {
+  cursor: pointer;
+  background-color: #d13b28
+}
+
 body > header .actions a:hover {
   color: #dd5f4f;
 }

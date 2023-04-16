@@ -2,11 +2,13 @@ extends layout
 
 block headerLinks
   .actions
-    a.add(href='/lists/new') New List
+    if signedIn
+      a.add(href='/lists/new') New List
 
 block main
   if todoLists === undefined || todoLists.length === 0
-    p#no_list You don't have any todo lists. Why no create one?
+    if signedIn
+      p#no_list You don't have any todo lists. Why no create one?
   else
     ul#lists
       each todoList, idx in todoLists

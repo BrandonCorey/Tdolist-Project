@@ -1,3 +1,4 @@
 node_modules
 .eslintrc.yml
 lib/users.sql
+session-store.db

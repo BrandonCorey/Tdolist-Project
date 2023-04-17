@@ -1,0 +1,23 @@
+extends layout
+
+block main
+  form(action='/users/signin' method='post')
+    dl
+      dt
+        label(for='username') Choose a username:
+      dd
+        input(type='text' name='username' id='username' placeholder='username' value=username)
+      dt
+        label(for='password') Choose a password:
+      dd
+        input(type='text' name='password' id='username' placeholder='password')
+      dt
+        label(for='password') Re-enter password:
+      dd
+        input(type='text' name='password' id='username' placeholder='password')
+
+    fieldset.actions
+      input(type='submit' value='Sign Up')
+      a(href='/lists') Cancel
+
+block signIn

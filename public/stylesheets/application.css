@@ -46,6 +46,11 @@ form fieldset.actions button {
   margin-top: 1rem;
 }
 
+form.account_actions {
+  display: inline-block;
+  padding: 0 8rem;
+}
+
 .account {
   display: block;
   margin: 0 auto;
@@ -106,11 +111,11 @@ footer > form {
 }
 
 form dt {
-  padding: 0 0 25px;
+  padding: 0 0 10px;
 }
 
 form dd {
-  padding: 0 0 15px;
+  padding: 0 0 30px;
 }
 
 form input[type="text"],

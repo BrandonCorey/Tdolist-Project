@@ -30,7 +30,13 @@ html(lang='en-US')
               p.account Signed in as #{username}.
               button.account Sign Out
         else
-          form(action="/users/signin" method="get")
+          form.account_actions(action="/users/signin" method="get")
             fieldset.actions
               p.account You are not signed in.
               button.account Sign In
+          
+
+          form.account_actions(action="users/signup" method="get")
+            fieldset.actions
+              p.account Don't have an account?
+              button.account Sign up

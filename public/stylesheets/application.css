@@ -46,9 +46,15 @@ form fieldset.actions button {
   margin-top: 1rem;
 }
 
+.account {
+  display: block;
+  margin: 0 auto;
+  text-align: center;
+}
+
 form fieldset.actions button:hover {
   cursor: pointer;
-  background-color: #d13b28
+  background-color: #d13b28;
 }
 
 body > header .actions a:hover {

@@ -41,7 +41,7 @@ app.use(flash());
 // Create new data store
 // Constructor needs access to req.session so that it can access persited data of store
 app.use((req, res, next) => {
-  res.locals.store = new PgPersistence();
+  res.locals.store = new PgPersistence(req.session);
   next();
 });
 
@@ -56,9 +56,7 @@ app.use((req, res, next) => {
 // Custom middleware that checks if a user is signed in before preceding with certain route handlers
 const requiresAuthentification = (req, res, next) => {
   if (!res.locals.signedIn) {
-    res.setStatus(401);
-    console.log('Unauthorized.');
-    res.send('Unauthorized.');
+    res.redirect(302, '/users/signin');
   } else {
     next();
   }
@@ -69,6 +67,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/lists',
+  //requiresAuthentification,
   catchError(async (req, res) => {
     let store = res.locals.store;
     let todoLists = await store.sortedTodoLists();
@@ -93,6 +92,7 @@ app.get('/lists/new',
 });
 
 app.get('/lists/:todoListId',
+  requiresAuthentification,
   catchError(async (req, res) => {
 
     let store = res.locals.store;

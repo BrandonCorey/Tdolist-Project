@@ -188,7 +188,7 @@ app.post('/users/signup',
 
         return lowerChar.test(username) && upperChar.test(username) && digit.test(username);
       })
-      .withMessage('Password must contain at least one lowercase, one uppercase, and one digit character.')
+      .withMessage("Your password must contain at least one uppercase letter, one lowercase letter, and one number.")
       .bail(),
     body('confirmPassword')
       .custom((confirmPassword, { req }) => {

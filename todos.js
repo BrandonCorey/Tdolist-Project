@@ -12,8 +12,8 @@ const catchError = require('./lib/catch-error');
 
 
 const app = express();
-const host = config.HOST
-const port = config.PORT
+const host = config.HOST;
+const port = config.PORT;
 const LokiStore = store(session);
 
 app.set('views', './views');
@@ -60,7 +60,7 @@ const requiresAuthentification = (req, res, next) => {
   } else {
     next();
   }
-}
+};
 
 app.get('/', (req, res) => {
   res.redirect('/lists');
@@ -88,7 +88,7 @@ app.get('/lists/new',
   requiresAuthentification,
   (req, res) => {
     res.render('new-list');
-});
+  });
 
 app.get('/lists/:todoListId',
   requiresAuthentification,
@@ -97,11 +97,11 @@ app.get('/lists/:todoListId',
     let store = res.locals.store;
     let { todoListId } = req.params;
     let todoList = await store.loadTodoList(+todoListId);
-  
+
     if (!todoList) throw new Error('Not found.');
     else {
       todoList.todos = await store.sortedTodos(todoList);
-    
+
       res.render('list', {
         todoList,
         isDoneTodoList: store.isDoneTodoList(todoList),
@@ -124,7 +124,7 @@ app.get('/lists/:todoListId/edit',
 );
 
 app.get('/users/signin', (req, res) => {
-  req.flash('info', 'Please sign in.')
+  req.flash('info', 'Please sign in.');
   res.render('sign-in', {
     flash: Object.assign(res.locals.flash, req.flash()),
   });
@@ -145,7 +145,7 @@ app.post('/users/signin',
     let authenticated = await store.authenticateUser(username, password);
 
     if (!authenticated) {
-      req.flash('error', 'Invalid Credentials.')
+      req.flash('error', 'Invalid Credentials.');
       res.render('sign-in', {
         flash: req.flash(),
         username: req.body.username
@@ -207,27 +207,26 @@ app.post('/users/signup',
         flash: req.flash(),
         username
       });
-    }
+    };
 
     if (!errors.isEmpty()) {
       rerenderNewUser();
     } else if (await store.existsUsername(username)) {
       req.flash('error', 'A user with that name already exists.');
-      rerenderNewUser();  
+      rerenderNewUser();
     } else {
       let created = await store.createUserAccount(username, password);
-  
+
       if (!created) {
         req.flash('A user with that name already exists.');
         rerenderNewUser();
-      }
-      else {
+      } else {
         req.flash('success', 'Account successfully created!');
         res.redirect('/users/signin');
       }
     }
   })
-)
+);
 
 app.post('/lists',
   requiresAuthentification,
@@ -249,14 +248,14 @@ app.post('/lists',
         todoListTitle,
         flash: req.flash(),
       });
-    }
+    };
     let errors = validationResult(req);
     if (!errors.isEmpty()) {
       errors.array().forEach(error => req.flash('error', error.msg));
       rerenderNewList();
     } else if (await store.existsTodoListTitle(todoListTitle)) {
-        req.flash('error', 'The list title must be unique');
-        rerenderNewList();
+      req.flash('error', 'The list title must be unique');
+      rerenderNewList();
     } else {
       let created = await store.createTodoList(todoListTitle);
       if (!created) {
@@ -311,7 +310,7 @@ app.post('/lists/:todoListId/complete_all',
   catchError(async (req, res) => {
     let store = res.locals.store;
     let { todoListId } = req.params;
-    let completed = await store.completeAllTodos(+todoListId)
+    let completed = await store.completeAllTodos(+todoListId);
 
     if (!completed) throw new Error('Not found.');
     else {
@@ -352,7 +351,7 @@ app.post('/lists/:todoListId/todos',
         });
       } else {
         let created = await store.addTodo(+todoListId, todoTitle);
-        if (!created) throw new Error('Not found.')
+        if (!created) throw new Error('Not found.');
         else {
           req.flash('success', `"${todoTitle}" was added to ${todoList.title}`);
           res.redirect(`/lists/${todoListId}`);
@@ -398,7 +397,7 @@ app.post('/lists/:todoListId/edit',
 
     const rerenderEditList = async () => {
       let todoList = await store.loadTodoList(+todoListId);
-  
+
       if (!todoList) next(new Error('Not found.'));
       else {
         res.render('edit-list', {
@@ -407,19 +406,19 @@ app.post('/lists/:todoListId/edit',
           flash: req.flash(),
         });
       }
-    }
-    
+    };
+
     try {
       let errors = validationResult(req);
       if (!errors.isEmpty()) {
         errors.array().forEach(error => req.flash('error', error.msg));
         rerenderEditList();
       } else if (await store.existsTodoListTitle(todoListTitle)) {
-          req.flash('error', 'The list title must be unique');
-          rerenderEditList();
+        req.flash('error', 'The list title must be unique');
+        rerenderEditList();
       } else {
         let titleSet = await store.setTodoListTitle(+todoListId, todoListTitle);
-  
+
         if (!titleSet) throw new Error('Not found.');
         else {
           req.flash('success', 'List name was successfully changed!');

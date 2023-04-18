@@ -51,6 +51,13 @@ form.account_actions {
   padding: 0 8rem;
 }
 
+@media (max-width: 70em) {
+  form.account_actions {
+    display: block;
+    padding: 0 8rem;
+  }
+}
+
 .account {
   display: block;
   margin: 0 auto;

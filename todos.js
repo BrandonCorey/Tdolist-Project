@@ -126,7 +126,7 @@ app.get('/lists/:todoListId/edit',
 app.get('/users/signin', (req, res) => {
   req.flash('info', 'Please sign in.');
   res.render('sign-in', {
-    flash: Object.assign(res.locals.flash, req.flash()),
+    flash: Object.assign({}, res.locals.flash, req.flash()),
   });
 });
 

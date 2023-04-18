@@ -67,7 +67,6 @@ app.get('/', (req, res) => {
 });
 
 app.get('/lists',
-  //requiresAuthentification,
   catchError(async (req, res) => {
     let store = res.locals.store;
     let todoLists = await store.sortedTodoLists();
@@ -201,7 +200,7 @@ app.post('/users/signup',
       })
       .withMessage('Passwords do not match.')
   ],
-  (req, res) => {
+  catchError(async (req, res) => {
     let errors = validationResult(req);
     let { username, password } = req.body;
     errors.array().forEach(error => req.flash('error', error.msg));
@@ -213,7 +212,7 @@ app.post('/users/signup',
       });
     } else {
       let store = res.locals.store;
-      let created = store.createAccount(username, password);
+      let created = await store.createUserAccount(username, password);
 
       if (!created) throw new Error('Not found.');
       else {
@@ -221,7 +220,7 @@ app.post('/users/signup',
         res.redirect('/users/signin');
       }
     }
-  }
+  })
 )
 
 app.post('/lists',
@@ -235,7 +234,7 @@ app.post('/lists',
       .isLength({ max: 100})
       .withMessage('The title must be less than 100 characters'),
   ],
-  async (req, res, next) => {
+  catchError(async (req, res, next) => {
     let store = res.locals.store;
     let { todoListTitle } = req.body;
 
@@ -262,7 +261,7 @@ app.post('/lists',
         res.redirect(`/lists`);
       }
     }
-  }
+  })
 );
 
 app.post('/lists/:todoListId/todos/:todoId/toggle',

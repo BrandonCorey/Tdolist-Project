@@ -126,7 +126,7 @@ app.get('/lists/:todoListId/edit',
 app.get('/users/signin', (req, res) => {
   req.flash('info', 'Please sign in.')
   res.render('sign-in', {
-    flash: req.flash(),
+    flash: Object.assign(res.locals.flash, req.flash()),
   });
 });
 
@@ -161,7 +161,7 @@ app.post('/users/signin',
 app.post('/users/signout', (req, res) => {
   delete req.session.username;
   delete req.session.signedIn;
-  res.redirect('/users/signin');
+  res.redirect('/lists');
 });
 
 app.post('/users/signup',
@@ -186,10 +186,6 @@ app.post('/users/signup',
         let upperChar = /[A-Z]/;
         let digit = /\d/;
 
-        console.log(lowerChar.test(username));
-        console.log(upperChar.test(username));
-        console.log(digit.test(username));
-
         return lowerChar.test(username) && upperChar.test(username) && digit.test(username);
       })
       .withMessage('Password must contain at least one lowercase, one uppercase, and one digit character.')
@@ -201,20 +197,30 @@ app.post('/users/signup',
       .withMessage('Passwords do not match.')
   ],
   catchError(async (req, res) => {
+    let store = res.locals.store;
     let errors = validationResult(req);
     let { username, password } = req.body;
     errors.array().forEach(error => req.flash('error', error.msg));
 
-    if (!errors.isEmpty()) {
+    const rerenderNewUser = () => {
       res.render('sign-up', {
         flash: req.flash(),
         username
       });
-    } else {
-      let store = res.locals.store;
-      let created = await store.createUserAccount(username, password);
+    }
 
-      if (!created) throw new Error('Not found.');
+    if (!errors.isEmpty()) {
+      rerenderNewUser();
+    } else if (await store.existsUsername(username)) {
+      req.flash('error', 'A user with that name already exists.');
+      rerenderNewUser();  
+    } else {
+      let created = await store.createUserAccount(username, password);
+  
+      if (!created) {
+        req.flash('A user with that name already exists.');
+        rerenderNewUser();
+      }
       else {
         req.flash('success', 'Account successfully created!');
         res.redirect('/users/signin');

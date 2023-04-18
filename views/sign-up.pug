@@ -1,7 +1,7 @@
 extends layout
 
 block main
-  form(action='/users/signin' method='post')
+  form(action='/users/signup' method='post')
     dl
       dt
         label(for='username') Choose a username:
@@ -12,9 +12,9 @@ block main
       dd
         input(type='text' name='password' id='username' placeholder='password')
       dt
-        label(for='password') Re-enter password:
+        label(for='confirmPassword') Re-enter password:
       dd
-        input(type='text' name='password' id='username' placeholder='password')
+        input(type='text' name='confirmPassword' id='confirmPassword' placeholder='password')
 
     fieldset.actions
       input(type='submit' value='Sign Up')

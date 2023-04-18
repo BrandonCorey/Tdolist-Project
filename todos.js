@@ -163,7 +163,66 @@ app.post('/users/signout', (req, res) => {
   delete req.session.username;
   delete req.session.signedIn;
   res.redirect('/users/signin');
-})
+});
+
+app.post('/users/signup',
+  [
+    body('username')
+      .trim()
+      .isLength({ min: 1} )
+      .withMessage('A username is required.')
+      .bail()
+      .isLength({ max: 100 })
+      .withMessage('A username must be less than 100 characters'),
+    body('password')
+      .trim()
+      .isLength({ min: 8 })
+      .withMessage('A password must be greater than 8 characters long.')
+      .bail()
+      .isLength({ max: 100 })
+      .withMessage('A password must be less than 100 characters long')
+      .bail()
+      .custom((username) => {
+        let lowerChar = /[a-z]/;
+        let upperChar = /[A-Z]/;
+        let digit = /\d/;
+
+        console.log(lowerChar.test(username));
+        console.log(upperChar.test(username));
+        console.log(digit.test(username));
+
+        return lowerChar.test(username) && upperChar.test(username) && digit.test(username);
+      })
+      .withMessage('Password must contain at least one lowercase, one uppercase, and one digit character.')
+      .bail(),
+    body('confirmPassword')
+      .custom((confirmPassword, { req }) => {
+        return confirmPassword === req.body.password;
+      })
+      .withMessage('Passwords do not match.')
+  ],
+  (req, res) => {
+    let errors = validationResult(req);
+    let { username, password } = req.body;
+    errors.array().forEach(error => req.flash('error', error.msg));
+
+    if (!errors.isEmpty()) {
+      res.render('sign-up', {
+        flash: req.flash(),
+        username
+      });
+    } else {
+      let store = res.locals.store;
+      let created = store.createAccount(username, password);
+
+      if (!created) throw new Error('Not found.');
+      else {
+        req.flash('success', 'Account successfully created!');
+        res.redirect('/users/signin');
+      }
+    }
+  }
+)
 
 app.post('/lists',
   requiresAuthentification,
@@ -174,9 +233,7 @@ app.post('/lists',
       .withMessage('A list title is required.')
       .bail()
       .isLength({ max: 100})
-      .withMessage('The title must be less than 100 characters')
-      .bail()
-      .withMessage('List title already in use.')
+      .withMessage('The title must be less than 100 characters'),
   ],
   async (req, res, next) => {
     let store = res.locals.store;

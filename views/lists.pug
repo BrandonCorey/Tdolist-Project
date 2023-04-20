@@ -6,7 +6,7 @@ block headerLinks
 
 block main
   if todoLists === undefined || todoLists.length === 0 && signedIn
-    p#no_list You don't have any todo lists. Why no create one?
+    p#no_list You don't have any todo lists. Why not create one?
   else
     ul#lists
       each todoList, idx in todoLists

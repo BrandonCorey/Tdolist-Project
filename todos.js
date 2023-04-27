@@ -441,6 +441,10 @@ app.use((err, req, res, _next) => {
   res.status(404).send(err.message);
 });
 
+app.use((req, res, next) => {
+  res.status(404).send('Not found.');
+});
+
 app.listen(port, host, () => {
   console.log(`Listening on port ${port} of ${host}`);
 });

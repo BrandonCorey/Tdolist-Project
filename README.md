@@ -11,13 +11,16 @@ The todo app is straight forward it allows you to:
 - delete todos
 - delete todo lists
 
-### Additional Notes
-This applicaton was deployed using Heroku
 
-To run it youself you will need to:
+## Run:
 
-1. Clone the repository
-2. `npm install`
-3. `createdb [ databasaename ]`
-4. `psql [ databasename ] < schema.sql`
-5. `npm start`
+### `git clone <reponame>`
+### `npm install`
+### `sudo service postgresql start` (if using ubuntu)
+### `createdb [ databasaename ]`
+### `psql [ databasename ] < schema.sql`
+### `npm start`
+
+## Preview:
+![image](https://github.com/BrandonCorey/Todolist-Project/assets/93304067/4252e95a-8066-45c7-84a0-bedb4f40ec9b)
+
